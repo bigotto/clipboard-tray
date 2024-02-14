@@ -1,0 +1,19 @@
+{
+  "name": "clipboard-tray",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --watch . --exec \"electron .\""
+  },
+  "author": "Bruno Bigotto",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.2.2",
+    "nodemon": "^3.0.3"
+  },
+  "dependencies": {
+    "clipboard-event": "^1.6.0"
+  }
+}
