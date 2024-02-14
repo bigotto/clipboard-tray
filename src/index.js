@@ -1,3 +1,4 @@
+// @ts-check
 const { app, Menu, Tray, nativeImage, clipboard, MenuItem, shell} = require('electron')
 const Store = require('./store.js');
 
@@ -11,50 +12,58 @@ const store = new Store({
 
 store.set('clipboard-history', [
   { 
-    label: 'bruno',
-    type: 'normal', 
-    click: () => { clipboard.writeText('bruno')}, 
-    accelerator: process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Alt+Shift+I',
+    content: 'bruno',
+    type: 'text',
   },
   {
-    label: '', 
-    icon: image.resize({height: 50, width: 50}),
-    type: 'normal',
-  },
-  {
-    type: 'separator',
+    content: '',
+    type: 'image',
+    image: image.toDataURL()
   }
 ]);
 
-clipboardHistory = store.get('clipboard-history');
+let clipboardHistory = store.get('clipboard-history');
 
 const buildHistory = (history, setContextMenu) => {
   return history.map((item, index) => {
-    return setContextMenu.insert(index, new MenuItem(item))
+    const clipboardData = {};
+    clipboardData[item.type] = item.type == 'image' ? nativeImage.createFromDataURL(item.image): item.content;
+    
+    return setContextMenu.insert(index, new MenuItem({
+      label: item.content,
+      type: 'normal',
+      icon: item.type == 'image' ? nativeImage.createFromDataURL(item.image).resize({height: 50, width: 50 }): undefined,
+      click: () => { clipboard.write(clipboardData) },
+      accelerator: process.platform === 'darwin' ? `Alt+Cmd+${index + 1}` : `Alt+Shift+${index + 1}`,
+    })
+  )
   })
 }
 
 function clearHistory() {
   clipboardHistory = []
   store.set('clipboard-history', clipboardHistory)
-  tray.setContextMenu(contextMenu)
+  app.relaunch();
+  app.quit();
 }
 
 let tray = null
 app.whenReady().then(() => {
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
-    // { type: 'separator'},
     { label: 'Clear History', type: 'normal', enabled: Boolean(true), click: () => clearHistory()},
     { type: 'separator'},
     { label: 'Quit', role: 'quit', accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+Shift+I', }
   ]);
 
-  tray.setToolTip('This is my application.');
+  tray.setToolTip('Clipboard Tray');
   tray.setContextMenu(contextMenu);
 
-  buildHistory(clipboardHistory, contextMenu);
-  tray.setContextMenu(contextMenu);
+  if ( clipboardHistory.length ) {
+    buildHistory(clipboardHistory, contextMenu);
+    tray.setContextMenu(contextMenu);
+  }
+
 })
 
 app.dock.hide()

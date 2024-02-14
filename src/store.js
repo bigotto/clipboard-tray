@@ -24,7 +24,6 @@ function parseDataFile(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath));
   } catch(error) {
-    console.log('nao tem json no arquivo')
     return {};
   }
 }
